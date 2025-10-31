@@ -60,6 +60,7 @@ export class StorageStack extends cdk.Stack {
                     runtime: lambda.Runtime.PYTHON_3_9,
                     handler: 'size_tracking_handler.lambda_handler',
                     code: lambda.Code.fromAsset('lambda-handlers'),
+                    timeout: cdk.Duration.seconds(30), 
                     environment: { 'TABLE_NAME': this.dynamodbTable.tableName }
                 })
         
