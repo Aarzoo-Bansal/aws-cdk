@@ -61,10 +61,13 @@ export class LambdaStack extends cdk.Stack {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: 'plotting_handler.lambda_handler',
             code: lambda.Code.fromAsset('lambda-handlers'),
+            timeout: cdk.Duration.seconds(60),
+            memorySize: 512,
             environment: {
                 'BUCKET_NAME': props.bucket.bucketName,
                 'TABLE_NAME': props.table.tableName,
-                'INDEX_NAME': 'MaxSizeIndex'
+                'INDEX_NAME': 'MaxSizeIndex',
+                'MPLCONFIGDIR': '/tmp'
             },
             // adding matplotlib layer to the plotting lambda
             layers: [matplotlibLayer] 
