@@ -57,7 +57,15 @@ export class LambdaStack extends cdk.Stack {
                 'BUCKET_NAME': props.bucket.bucketName,
                 'TABLE_NAME': props.table.tableName,
                 'INDEX_NAME': 'MaxSizeIndex'
-            }
+            },
+            // adding matplotlib layer to the plotting lambda
+            layers: [
+                lambda.LayerVersion.fromLayerVersionArn( 
+                    this,
+                    'MatplotlibLayer',
+                    'arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p39-matplotlib:7'
+                )
+            ]
         });
         // Giving the write permission to plotting lambda so that it is able to write in the s3 bucket
         props.bucket.grantWrite(this.plottingLambda)
