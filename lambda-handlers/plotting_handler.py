@@ -50,6 +50,7 @@ def lambda_handler(event, context):
 
     # Querying the index to get the maximum size
     index_response = dynamodb_client.query(
+        TableName=table_name,
         IndexName=index_name,
         KeyConditionExpression='record_type = :rt',
         ExpressionAttributeValues={
