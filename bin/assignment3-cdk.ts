@@ -7,7 +7,12 @@ import { APIStack } from '../lib/api-stack';
 
 const app = new cdk.App();
 
-new StorageStack(app, 'StorageStack', {});
-new LambdaStack(app, 'LambdaStack', {});
+const storageStack = new StorageStack(app, 'StorageStack', {});
+
+const lambdaStack = new LambdaStack(app, 'LambdaStack', {
+  bucket: storageStack.s3Bucket,
+  table: storageStack.dynamodbTable
+});
+
 new APIStack(app, 'APIStack', {});
 
