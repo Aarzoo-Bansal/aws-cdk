@@ -43,7 +43,8 @@ def lambda_handler(event, context):
             'bucket_name' : {'S' : bucket_name},
             'timestamp' : {'N' : str(current_timestamp)},
             'total_size' : {'N' : str(total_size)},
-            'object_count' : {'N' : str(object_count)}
+            'object_count' : {'N' : str(object_count)},
+            'record_type' : {'S': 'bucket_object'} # added so that I can create an index with this as partition key
         })
     
     print(f"Successfully wrote to DynamoDB Table {table_name} - Bucket: {bucket_name}")

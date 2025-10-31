@@ -36,6 +36,20 @@ export class StorageStack extends cdk.Stack {
                 },
                 removalPolicy: RemovalPolicy.DESTROY,
             })
+
+        // to fulfill the requirement of finding the maxium size any bucket has reached at any time, creating an index
+        this.dynamodbTable.addGlobalSecondaryIndex({
+            indexName: 'MaxSizeIndex',
+            partitionKey: {
+                name: 'record_type',
+                type: dynamodb.AttributeType.STRING
+            },
+            sortKey: {
+                name: 'total_size',
+                type: dynamodb.AttributeType.NUMBER
+            },
+            projectionType: dynamodb.ProjectionType.ALL
+        })
     }
 
 }
