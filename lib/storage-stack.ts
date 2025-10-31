@@ -3,6 +3,8 @@ import {Construct} from 'constructs';
 import { RemovalPolicy } from 'aws-cdk-lib'; // to delete the S3 bucket when I destroy the stack
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class StorageStack extends cdk.Stack {
 
@@ -50,6 +52,31 @@ export class StorageStack extends cdk.Stack {
             },
             projectionType: dynamodb.ProjectionType.ALL
         })
+
+        /**************************************************************************************************************************************/
+
+        // Size tracking lambda
+        const sizeTrackingLambda = new lambda.Function(this, 'SizeTrackingLambdaConstruct', {
+                    runtime: lambda.Runtime.PYTHON_3_9,
+                    handler: 'size_tracking_handler.lambda_handler',
+                    code: lambda.Code.fromAsset('lambda-handlers'),
+                    environment: { 'TABLE_NAME': this.dynamodbTable.tableName }
+                })
+        
+                // Giving S3 read access to Size Tracking Lambda 
+                this.s3Bucket.grantRead(sizeTrackingLambda);
+        
+                // Giving DynamoDb write access to Size Tracking Lambda
+                this.dynamodbTable.grantWriteData(sizeTrackingLambda);
+        
+                // Adding policy so that s3 can trigger event, when an object is created, on size tracking lambda
+                sizeTrackingLambda.addEventSource(new S3EventSource(this.s3Bucket, {
+                    events: [
+                        s3.EventType.OBJECT_CREATED,
+                        s3.EventType.OBJECT_REMOVED
+                    ]
+                }));
+
     }
 
 }

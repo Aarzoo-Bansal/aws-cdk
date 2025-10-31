@@ -1,15 +1,13 @@
 import * as cdk from 'aws-cdk-lib/core';
-import {Construct} from 'constructs';
+import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
-
 
 // Creating interface to get table name from environment
 export interface LambdaStackProps extends cdk.StackProps {
-    bucket: s3.IBucket;
-    table: dynamodb.ITable;
+    bucket: s3.Bucket;
+    table: dynamodb.Table;
 }
 
 export class LambdaStack extends cdk.Stack {
@@ -26,30 +24,26 @@ export class LambdaStack extends cdk.Stack {
 
         /***************************************************************************************** */
         // Size tracking lambda
-        const sizeTrackingLambda = new lambda.Function(this, 'SizeTrackingLambdaConstruct', {
-            runtime: lambda.Runtime.PYTHON_3_9,
-            handler: 'size_tracking_handler.lambda_handler',
-            code: lambda.Code.fromAsset('lambda-handlers'),
-            environment: {'TABLE_NAME' : props.table.tableName}
-        })
+        // const sizeTrackingLambda = new lambda.Function(this, 'SizeTrackingLambdaConstruct', {
+        //     runtime: lambda.Runtime.PYTHON_3_9,
+        //     handler: 'size_tracking_handler.lambda_handler',
+        //     code: lambda.Code.fromAsset('lambda-handlers'),
+        //     environment: { 'TABLE_NAME': props.table.tableName }
+        // })
 
-        // Giving S3 read access to Size Tracking Lambda 
-        props.bucket.grantRead(sizeTrackingLambda);
+        // // Giving S3 read access to Size Tracking Lambda 
+        // props.bucket.grantRead(sizeTrackingLambda);
 
-        // Giving DynamoDb write access to Size Tracking Lambda
-        props.table.grantWriteData(sizeTrackingLambda);
+        // // Giving DynamoDb write access to Size Tracking Lambda
+        // props.table.grantWriteData(sizeTrackingLambda);
 
-        // Adding policy so that s3 can trigger event, when an object is created, on size tracking lambda
-        props.bucket.addEventNotification(
-            s3.EventType.OBJECT_CREATED,
-            new s3n.LambdaDestination(sizeTrackingLambda)
-        )
-
-        // Adding policy so that s3 can trigger event to size tracking lambda when object is deleted or updated
-        props.bucket.addEventNotification(
-            s3.EventType.OBJECT_REMOVED,
-            new s3n.LambdaDestination(sizeTrackingLambda)
-        )
+        // // Adding policy so that s3 can trigger event, when an object is created, on size tracking lambda
+        // sizeTrackingLambda.addEventSource(new S3EventSource(props.bucket, {
+        //     events: [
+        //         s3.EventType.OBJECT_CREATED,
+        //         s3.EventType.OBJECT_REMOVED
+        //     ]
+        // }));
 
         /***************************************************************************************** */
         // Plotting Lambda
@@ -57,10 +51,10 @@ export class LambdaStack extends cdk.Stack {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: 'plotting_handler.lambda_handler',
             code: lambda.Code.fromAsset('lambda-handlers'),
-            environment : {
-                'BUCKET_NAME' : props.bucket.bucketName,
-                'TABLE_NAME' : props.table.tableName,
-                'INDEX_NAME' : 'MaxSizeIndex'
+            environment: {
+                'BUCKET_NAME': props.bucket.bucketName,
+                'TABLE_NAME': props.table.tableName,
+                'INDEX_NAME': 'MaxSizeIndex'
             }
         })
 
@@ -69,12 +63,6 @@ export class LambdaStack extends cdk.Stack {
 
         // Giving read permission to plotting lambda so that it can read from dynamodb table
         props.table.grantReadData(this.plottingLambda);
-
-
-
-
-
-
 
     }
 
