@@ -48,6 +48,14 @@ export class LambdaStack extends cdk.Stack {
         // }));
 
         /******************************************************************************************************************************/
+        // Create matplotlib layer
+        const matplotlibLayer = new lambda.LayerVersion(this, 'MatplotlibLayer', {
+            code: lambda.Code.fromAsset('layers/matplotlib'),
+            compatibleRuntimes: [lambda.Runtime.PYTHON_3_9],
+            description: 'Matplotlib and dependencies for Python 3.9'
+        });
+
+        /******************************************************************************************************************************/
         // Plotting Lambda
         this.plottingLambda = new lambda.Function(this, 'PlottingLambdaConstruct', {
             runtime: lambda.Runtime.PYTHON_3_9,
@@ -59,13 +67,7 @@ export class LambdaStack extends cdk.Stack {
                 'INDEX_NAME': 'MaxSizeIndex'
             },
             // adding matplotlib layer to the plotting lambda
-            layers: [
-                lambda.LayerVersion.fromLayerVersionArn( 
-                    this,
-                    'MatplotlibLayer',
-                    'arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p39-matplotlib:7'
-                )
-            ]
+            layers: [matplotlibLayer] 
         });
         // Giving the write permission to plotting lambda so that it is able to write in the s3 bucket
         props.bucket.grantWrite(this.plottingLambda)
@@ -90,6 +92,7 @@ export class LambdaStack extends cdk.Stack {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: 'driver_handler.lambda_handler',
             code: lambda.Code.fromAsset('lambda-handlers'),
+            timeout: cdk.Duration.seconds(60),
             environment: {
                 'BUCKET_NAME': props.bucket.bucketName,
                 'PLOTTING_API': api.url
